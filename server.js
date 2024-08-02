@@ -9,7 +9,6 @@ const PORT = "3000";
 const LINE_API = "https://api.line.me/v2/bot";
 
 let usersData = [];
-console.log("USER DATA:", usersData);
 
 const sequenceQuestion = [
   {
@@ -89,7 +88,6 @@ const sequenceQuestion = [
 ];
 
 const sendMessage = async (userId, message, token) => {
-  console.log("first", message);
   try {
     const headers = {
       ContentType: "application/json",
@@ -103,7 +101,7 @@ const sendMessage = async (userId, message, token) => {
     const res = await axios.post(`${LINE_API}/message/push`, body, {
       headers,
     });
-    // console.log("response sendmsg", res);
+
     return res;
   } catch (err) {
     throw new Error(err);
@@ -131,7 +129,7 @@ function evaluateScore(score) {
 app.post("/webhook", async (req, res) => {
   try {
     const { events } = req.body;
-    console.log("events", events);
+
     if (!events || events.length === 0) {
       return res.json({ message: "Succesful connect to webhook" });
     }
@@ -164,10 +162,8 @@ app.post("/webhook", async (req, res) => {
             token
           );
         }
-        console.log("new user?");
       }
 
-      console.log("User data:", usersData);
       const [filterUsers] = usersData.filter((user) => user.id === userId);
 
       if (webhookEventObject.message.text === "ใช่") {
@@ -192,7 +188,6 @@ app.post("/webhook", async (req, res) => {
       }
       const userMessageText =
         sequenceQuestion[filterUsers.questionIndex].question;
-      console.log("user:", filterUsers);
 
       await sendMessage(userId, userMessageText, token);
     }
