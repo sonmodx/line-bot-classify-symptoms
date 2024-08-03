@@ -161,10 +161,24 @@ app.post("/webhook", async (req, res) => {
 
             token
           );
+          return res.json({ message: "Wrong command!" });
         }
       }
 
       const [filterUsers] = usersData.filter((user) => user.id === userId);
+      if (!filterUsers) {
+        await sendMessage(
+          userId,
+          [
+            {
+              type: "text",
+              text: "You have not started screening. Please type 'แบบคัดกรองผู้ป่วย' to start.",
+            },
+          ],
+          token
+        );
+        return; // Exit if user data is not found
+      }
 
       if (webhookEventObject.message.text === "ใช่") {
         filterUsers.score += sequenceQuestion[filterUsers.questionIndex].score;
@@ -196,7 +210,8 @@ app.post("/webhook", async (req, res) => {
       message: "Response to LINE Platform",
     });
   } catch (err) {
-    console.log(err);
+    console.error("Error handling request:", err);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
