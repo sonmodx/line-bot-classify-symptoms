@@ -100,6 +100,7 @@ const sendMessage = async (userId, message, token) => {
 
     const res = await axios.post(`${LINE_API}/message/push`, body, {
       headers,
+      timeout: 5000,
     });
 
     return res;
