@@ -1,5 +1,7 @@
 const { default: axios } = require("axios");
 const express = require("express");
+const { google } = require("googleapis");
+const { formatDate } = require("./utils");
 const app = express();
 
 app.use(express.json());
@@ -7,6 +9,10 @@ require("dotenv").config();
 
 const PORT = "3000";
 const LINE_API = "https://api.line.me/v2/bot";
+const serviceAccountKeyFile = "./thematic-answer-432603-p4-74c1e94139fe.json";
+const sheetId = "18mEx7Ut_x59Wh3uByYPvS1rSfR9HIqfrsjsLh1IBwY8";
+const tabName = "Users";
+const range = "A:C";
 
 let usersData = [];
 
@@ -100,14 +106,38 @@ const sendMessage = async (userId, message, token) => {
 
     const res = await axios.post(`${LINE_API}/message/push`, body, {
       headers,
-      timeout: 5000,
     });
 
     return res;
   } catch (err) {
+    console.error("Error sending message:", err);
+
     throw new Error(err);
   }
 };
+
+async function getUserProfile(userId, token) {
+  try {
+    const headers = {
+      ContentType: "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+
+    const res = await axios.get(
+      `${LINE_API}/profile/${userId}`,
+
+      {
+        headers,
+      }
+    );
+
+    return res;
+  } catch (err) {
+    console.error("Error get user profile:", err);
+
+    throw new Error(err);
+  }
+}
 
 function checkUserIdExists(inputUserId) {
   return usersData.some((user) => user.id === inputUserId);
@@ -117,15 +147,69 @@ function deleteUserId(inputUserId) {
   return usersData.filter((user) => user.id !== inputUserId);
 }
 
-function evaluateScore(score) {
+function evaluateScore(score, symptoms) {
   if (score >= 15) {
-    return "ท่านอยู่ในกลุ่ม เร่งด่วนมาก ให้มาโรงพยาบาลทันที\nคำแนะนำ หากท่านมีอาการดังกล่าว\nหากมีอาการข้อใดข้อหนึ่งท่านสามารถเข้ารับบริการที่โรงพยาบาลทันทีที่แผนกฉุกเฉินหรือโทรศัพท์ 1669";
+    return 'ท่านอยู่ในกลุ่ม "เร่งด่วนมาก" ให้มาโรงพยาบาลทันที\nคำแนะนำ หากท่านมีอาการดังกล่าว\nหากมีอาการข้อใดข้อหนึ่งท่านสามารถเข้ารับบริการที่โรงพยาบาลทันทีที่แผนกฉุกเฉินหรือโทรศัพท์ 1669';
   }
   if (score >= 7) {
-    return "ท่านอยู่ในกลุ่ม เร่งด่วน ให้มาตรวจรักษาก่อนนัดหมาย\nคำแนะนำ หากท่านมีอาการดังกล่าว\nให้มาตรวจรักษาก่อนนัดหมายโดยนำใบนัดหมายเดิมมาด้วย";
+    return `ท่านมีอาการ\n${displaySymptoms(
+      symptoms
+    )}ท่านอยู่ในกลุ่ม "เร่งด่วน" ให้มาตรวจรักษาก่อนนัดหมาย คำแนะนำ หากท่านมีอาการดังกล่าว\nให้มาตรวจรักษาก่อนนัดหมายโดยนำใบนัดหมายเดิมมาด้วย`;
   }
-  return "ท่านอยู่ในกลุ่ม กึ่งเร่งด่วน\nคำแนะนำ หากท่านมีอาการดังกล่าว\n1. ให้นอนพักมากๆ ประเมินอาการซ้ำวันรุ่งขึ้น\n2. ประทานอาหาร และเครื่องดื่มที่ย่อยง่าย ไม่ควรฝืนรับประทาน หาก รู้สึกคลื่นไส้ ให้รับประทานอาหารมื้อละน้อยๆ แต่ บ่อยๆ รักษาความสะอาดในช่องปากและทำความ สะอาดช่องปากหลังรับปะทานอาหาร\n3. ให้ทำการยืดเหยียด กระดกปลายเท้าขึ้นและนวดที่น่องเพื่อผ่อนคลาย หากไม่ดีขึ้นให้ทำการประคบร้อน โดยปกติอาการควรดีขึ้นภายใน 1 - 2 นาที ในผู้ที่มีอาการถี่มากกว่า 3 ครั้งต่อสัปดาห์ควรพบแพทย์\n4. ให้มาตรวจตามนัดหมายโดยนำใบนัดหมายมาหากมีคำสั่งเจาะเลือดตรวจปัสสาวะ สามารถตรวจเลือดและปัสสาวะล่วงหน้าได้ 1 - 2 วัน";
+  return `ท่านมีอาการ\n${displaySymptoms(
+    symptoms
+  )}ท่านอยู่ในกลุ่ม "กึ่งเร่งด่วน" คำแนะนำ หากท่านมีอาการดังกล่าว\n1. ให้นอนพักมากๆ ประเมินอาการซ้ำวันรุ่งขึ้น\n2. ประทานอาหาร และเครื่องดื่มที่ย่อยง่าย ไม่ควรฝืนรับประทาน หาก รู้สึกคลื่นไส้ ให้รับประทานอาหารมื้อละน้อยๆ แต่ บ่อยๆ รักษาความสะอาดในช่องปากและทำความ สะอาดช่องปากหลังรับปะทานอาหาร\n3. ให้ทำการยืดเหยียด กระดกปลายเท้าขึ้นและนวดที่น่องเพื่อผ่อนคลาย หากไม่ดีขึ้นให้ทำการประคบร้อน โดยปกติอาการควรดีขึ้นภายใน 1 - 2 นาที ในผู้ที่มีอาการถี่มากกว่า 3 ครั้งต่อสัปดาห์ควรพบแพทย์\n4. ให้มาตรวจตามนัดหมายโดยนำใบนัดหมายมาหากมีคำสั่งเจาะเลือดตรวจปัสสาวะ สามารถตรวจเลือดและปัสสาวะล่วงหน้าได้ 1 - 2 วัน`;
 }
+
+function displaySymptoms(symptoms) {
+  const res = symptoms.map(
+    (symp, index) => `${index + 1}. ${symp.text.split(". ")[1]}\n`
+  );
+
+  return res.join("") || "ไม่มีอาการใดๆที่กล่าวมา\n";
+}
+
+async function _getGoogleSheetClient() {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: serviceAccountKeyFile,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+  const authClient = await auth.getClient();
+  return google.sheets({
+    version: "v4",
+    auth: authClient,
+  });
+}
+
+async function _readGoogleSheet(googleSheetClient, sheetId, tabName, range) {
+  const res = await googleSheetClient.spreadsheets.values.get({
+    spreadsheetId: sheetId,
+    range: `${tabName}!${range}`,
+  });
+
+  return res.data.values;
+}
+
+async function _writeGoogleSheet(
+  googleSheetClient,
+  sheetId,
+  tabName,
+  range,
+  data
+) {
+  await googleSheetClient.spreadsheets.values.append({
+    spreadsheetId: sheetId,
+    range: `${tabName}!${range}`,
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
+    resource: {
+      majorDimension: "ROWS",
+      values: data,
+    },
+  });
+}
+
+app.get("/", (req, res) => res.send("Express on Vercel"));
 
 app.post("/webhook", async (req, res) => {
   try {
@@ -137,10 +221,37 @@ app.post("/webhook", async (req, res) => {
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
     const webhookEventObject = events[0];
     const userId = webhookEventObject.source.userId;
-    //U12909875dbef6df2de5e8ea9f8f87e6f
+
     //Init state
+    console.log("object webhook", webhookEventObject);
     if (webhookEventObject.message.type === "text") {
-      if (!checkUserIdExists(userId)) {
+      if (webhookEventObject.message.text === "สอบถามเพิ่มเติม") {
+        await sendMessage(
+          userId,
+          [
+            {
+              type: "text",
+              text: "สามารถสอบถามเข้ามาได้เลย",
+            },
+          ],
+
+          token
+        );
+        return res.json({ message: "Success" });
+      } else if (webhookEventObject.message.text === "ช่องทางติดต่อ") {
+        await sendMessage(
+          userId,
+          [
+            {
+              type: "text",
+              text: "เบอร์โทร 08xxxxxxxx\nโรงพยาบาลxxxxxxxxx",
+            },
+          ],
+
+          token
+        );
+        return res.json({ message: "Success" });
+      } else if (!checkUserIdExists(userId)) {
         if (webhookEventObject.message.text === "แบบคัดกรองผู้ป่วย") {
           usersData = [
             ...usersData,
@@ -148,6 +259,7 @@ app.post("/webhook", async (req, res) => {
               id: userId,
               score: 0,
               questionIndex: 0,
+              symptoms: [],
             },
           ];
         } else {
@@ -183,17 +295,45 @@ app.post("/webhook", async (req, res) => {
 
       if (webhookEventObject.message.text === "ใช่") {
         filterUsers.score += sequenceQuestion[filterUsers.questionIndex].score;
+        const [desQuestionArray] =
+          sequenceQuestion[filterUsers.questionIndex].question;
+        filterUsers.symptoms = [...filterUsers.symptoms, desQuestionArray];
+
         filterUsers.questionIndex += 1;
       } else if (webhookEventObject.message.text === "ไม่") {
         filterUsers.questionIndex += 1;
       }
       if (filterUsers.questionIndex > 6 || filterUsers.score >= 15) {
+        const googleSheetClient = await _getGoogleSheetClient();
+        const date = new Date();
+        const showDate = formatDate(date.toLocaleDateString());
+        const { data: userProfile } = await getUserProfile(userId, token);
+        const userResult = evaluateScore(
+          filterUsers.score,
+          filterUsers.symptoms
+        );
+
+        const dataToBeInserted = [
+          [
+            `${showDate} ${date.toLocaleTimeString()}`,
+            userProfile.displayName,
+            userResult,
+          ],
+        ];
+        await _writeGoogleSheet(
+          googleSheetClient,
+          sheetId,
+          tabName,
+          range,
+          dataToBeInserted
+        );
+
         await sendMessage(
           userId,
           [
             {
               type: "text",
-              text: evaluateScore(filterUsers.score),
+              text: userResult,
             },
           ],
           token
