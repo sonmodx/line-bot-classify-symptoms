@@ -148,17 +148,33 @@ function deleteUserId(inputUserId) {
 }
 
 function evaluateScore(score, symptoms) {
+  const resultSymptoms = displaySymptoms(symptoms);
+  let symptomGroup, suggestion, imageURL;
+  // https://drive.google.com/file/d/1HKykOhoCIGHyQKaYQkEYTXevpAxbf8Qy/view?usp=sharing
+  // https://drive.google.com/file/d/1nUJl7kZAVD4sIxwopTEaTxyekuxoKNu4/view?usp=sharing
+  // https://drive.google.com/file/d/1TWnkiEiuLYdd-7ppmilW6c11SnrurXuB/view?usp=sharing
   if (score >= 15) {
-    return 'ท่านอยู่ในกลุ่ม "เร่งด่วนมาก" ให้มาโรงพยาบาลทันที\nคำแนะนำ หากท่านมีอาการดังกล่าว\nหากมีอาการข้อใดข้อหนึ่งท่านสามารถเข้ารับบริการที่โรงพยาบาลทันทีที่แผนกฉุกเฉินหรือโทรศัพท์ 1669';
+    symptomGroup = `ท่านอยู่ในกลุ่ม "เร่งด่วนมาก" ให้มาโรงพยาบาลทันที`;
+    imageURL =
+      "https://cdn.discordapp.com/attachments/1070279783713341491/1277295903471960199/2_1.png?ex=66cca602&is=66cb5482&hm=d567f7984c897b1e1e0b00d53e37786bd3c8bc148df3e4b0a04bc090856efe61&";
+    suggestion =
+      "คำแนะนำ หากท่านมีอาการดังกล่าว\nหากมีอาการข้อใดข้อหนึ่งท่านสามารถเข้ารับบริการที่โรงพยาบาลทันทีที่แผนกฉุกเฉินหรือโทรศัพท์ 1669";
+    return { symptomGroup, suggestion, imageURL };
   }
   if (score >= 7) {
-    return `ท่านมีอาการ\n${displaySymptoms(
-      symptoms
-    )}ท่านอยู่ในกลุ่ม "เร่งด่วน" ให้มาตรวจรักษาก่อนนัดหมาย คำแนะนำ หากท่านมีอาการดังกล่าว\nให้มาตรวจรักษาก่อนนัดหมายโดยนำใบนัดหมายเดิมมาด้วย`;
+    symptomGroup = `ท่านมีอาการ\n${resultSymptoms}\nท่านอยู่ในกลุ่ม "เร่งด่วน" ให้มาตรวจรักษาก่อนนัดหมาย`;
+    imageURL =
+      "https://cdn.discordapp.com/attachments/1070279783713341491/1277295926511140895/3.png?ex=66cca607&is=66cb5487&hm=07f2cc1e091484b45950bd0f1e25d6661aa1892af485f0a0741ef723de0f2cba&";
+    suggestion =
+      "คำแนะนำ หากท่านมีอาการดังกล่าว\nให้มาตรวจรักษาก่อนนัดหมายโดยนำใบนัดหมายเดิมมาด้วย";
+    return { symptomGroup, suggestion, imageURL };
   }
-  return `ท่านมีอาการ\n${displaySymptoms(
-    symptoms
-  )}ท่านอยู่ในกลุ่ม "กึ่งเร่งด่วน" คำแนะนำ หากท่านมีอาการดังกล่าว\n1. ให้นอนพักมากๆ ประเมินอาการซ้ำวันรุ่งขึ้น\n2. ประทานอาหาร และเครื่องดื่มที่ย่อยง่าย ไม่ควรฝืนรับประทาน หาก รู้สึกคลื่นไส้ ให้รับประทานอาหารมื้อละน้อยๆ แต่ บ่อยๆ รักษาความสะอาดในช่องปากและทำความ สะอาดช่องปากหลังรับปะทานอาหาร\n3. ให้ทำการยืดเหยียด กระดกปลายเท้าขึ้นและนวดที่น่องเพื่อผ่อนคลาย หากไม่ดีขึ้นให้ทำการประคบร้อน โดยปกติอาการควรดีขึ้นภายใน 1 - 2 นาที ในผู้ที่มีอาการถี่มากกว่า 3 ครั้งต่อสัปดาห์ควรพบแพทย์\n4. ให้มาตรวจตามนัดหมายโดยนำใบนัดหมายมาหากมีคำสั่งเจาะเลือดตรวจปัสสาวะ สามารถตรวจเลือดและปัสสาวะล่วงหน้าได้ 1 - 2 วัน`;
+  symptomGroup = `ท่านมีอาการ\n${resultSymptoms}\nท่านอยู่ในกลุ่ม "กึ่งเร่งด่วน"`;
+  imageURL =
+    "https://cdn.discordapp.com/attachments/1070279783713341491/1277295940360998942/4.png?ex=66cca60b&is=66cb548b&hm=bfafeecf666f8394e41b5456c2933c3b6b354bceaca2ff04cec15fe2eb5cf5ce&";
+  suggestion =
+    "คำแนะนำ หากท่านมีอาการดังกล่าว\n1. ให้นอนพักมากๆ ประเมินอาการซ้ำวันรุ่งขึ้น\n2. ประทานอาหาร และเครื่องดื่มที่ย่อยง่าย ไม่ควรฝืนรับประทาน หาก รู้สึกคลื่นไส้ ให้รับประทานอาหารมื้อละน้อยๆ แต่ บ่อยๆ รักษาความสะอาดในช่องปากและทำความ สะอาดช่องปากหลังรับปะทานอาหาร\n3. ให้ทำการยืดเหยียด กระดกปลายเท้าขึ้นและนวดที่น่องเพื่อผ่อนคลาย หากไม่ดีขึ้นให้ทำการประคบร้อน โดยปกติอาการควรดีขึ้นภายใน 1 - 2 นาที ในผู้ที่มีอาการถี่มากกว่า 3 ครั้งต่อสัปดาห์ควรพบแพทย์\n4. ให้มาตรวจตามนัดหมายโดยนำใบนัดหมายมาหากมีคำสั่งเจาะเลือดตรวจปัสสาวะ สามารถตรวจเลือดและปัสสาวะล่วงหน้าได้ 1 - 2 วัน";
+  return { symptomGroup, suggestion, imageURL };
 }
 
 function displaySymptoms(symptoms) {
@@ -308,16 +324,17 @@ app.post("/webhook", async (req, res) => {
         const date = new Date();
         const showDate = formatDate(date.toLocaleDateString());
         const { data: userProfile } = await getUserProfile(userId, token);
-        const userResult = evaluateScore(
+        const { symptomGroup, suggestion, imageURL } = evaluateScore(
           filterUsers.score,
           filterUsers.symptoms
         );
+        console.log("iamgeg", imageURL);
 
         const dataToBeInserted = [
           [
             `${showDate} ${date.toLocaleTimeString()}`,
             userProfile.displayName,
-            userResult,
+            symptomGroup,
           ],
         ];
         await _writeGoogleSheet(
@@ -327,17 +344,22 @@ app.post("/webhook", async (req, res) => {
           range,
           dataToBeInserted
         );
-
         await sendMessage(
           userId,
           [
             {
               type: "text",
-              text: userResult,
+              text: symptomGroup,
+            },
+            {
+              type: "image",
+              originalContentUrl: imageURL,
+              previewImageUrl: imageURL,
             },
           ],
           token
         );
+
         usersData = deleteUserId(userId);
         return;
       }
