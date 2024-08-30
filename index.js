@@ -150,13 +150,11 @@ function deleteUserId(inputUserId) {
 function evaluateScore(score, symptoms) {
   const resultSymptoms = displaySymptoms(symptoms);
   let symptomGroup, suggestion, imageURL;
-  // https://drive.google.com/file/d/1HKykOhoCIGHyQKaYQkEYTXevpAxbf8Qy/view?usp=sharing
-  // https://drive.google.com/file/d/1nUJl7kZAVD4sIxwopTEaTxyekuxoKNu4/view?usp=sharing
-  // https://drive.google.com/file/d/1TWnkiEiuLYdd-7ppmilW6c11SnrurXuB/view?usp=sharing
+
   if (score >= 15) {
     symptomGroup = `ท่านอยู่ในกลุ่ม "เร่งด่วนมาก" ให้มาโรงพยาบาลทันที`;
     imageURL =
-      "https://cdn.discordapp.com/attachments/1070279783713341491/1277295903471960199/2_1.png?ex=66cca602&is=66cb5482&hm=d567f7984c897b1e1e0b00d53e37786bd3c8bc148df3e4b0a04bc090856efe61&";
+      "https://live.staticflickr.com/65535/53958595346_8208ed6f6e_c.jpg";
     suggestion =
       "คำแนะนำ หากท่านมีอาการดังกล่าว\nหากมีอาการข้อใดข้อหนึ่งท่านสามารถเข้ารับบริการที่โรงพยาบาลทันทีที่แผนกฉุกเฉินหรือโทรศัพท์ 1669";
     return { symptomGroup, suggestion, imageURL };
@@ -164,14 +162,14 @@ function evaluateScore(score, symptoms) {
   if (score >= 7) {
     symptomGroup = `ท่านมีอาการ\n${resultSymptoms}\nท่านอยู่ในกลุ่ม "เร่งด่วน" ให้มาตรวจรักษาก่อนนัดหมาย`;
     imageURL =
-      "https://cdn.discordapp.com/attachments/1070279783713341491/1277295926511140895/3.png?ex=66cca607&is=66cb5487&hm=07f2cc1e091484b45950bd0f1e25d6661aa1892af485f0a0741ef723de0f2cba&";
+      "https://live.staticflickr.com/65535/53957664967_7f1888cda6_c.jpg";
     suggestion =
       "คำแนะนำ หากท่านมีอาการดังกล่าว\nให้มาตรวจรักษาก่อนนัดหมายโดยนำใบนัดหมายเดิมมาด้วย";
     return { symptomGroup, suggestion, imageURL };
   }
   symptomGroup = `ท่านมีอาการ\n${resultSymptoms}\nท่านอยู่ในกลุ่ม "กึ่งเร่งด่วน"`;
-  imageURL =
-    "https://cdn.discordapp.com/attachments/1070279783713341491/1277295940360998942/4.png?ex=66cca60b&is=66cb548b&hm=bfafeecf666f8394e41b5456c2933c3b6b354bceaca2ff04cec15fe2eb5cf5ce&";
+
+  imageURL = "https://live.staticflickr.com/65535/53958880314_0cfd1756a1_c.jpg";
   suggestion =
     "คำแนะนำ หากท่านมีอาการดังกล่าว\n1. ให้นอนพักมากๆ ประเมินอาการซ้ำวันรุ่งขึ้น\n2. ประทานอาหาร และเครื่องดื่มที่ย่อยง่าย ไม่ควรฝืนรับประทาน หาก รู้สึกคลื่นไส้ ให้รับประทานอาหารมื้อละน้อยๆ แต่ บ่อยๆ รักษาความสะอาดในช่องปากและทำความ สะอาดช่องปากหลังรับปะทานอาหาร\n3. ให้ทำการยืดเหยียด กระดกปลายเท้าขึ้นและนวดที่น่องเพื่อผ่อนคลาย หากไม่ดีขึ้นให้ทำการประคบร้อน โดยปกติอาการควรดีขึ้นภายใน 1 - 2 นาที ในผู้ที่มีอาการถี่มากกว่า 3 ครั้งต่อสัปดาห์ควรพบแพทย์\n4. ให้มาตรวจตามนัดหมายโดยนำใบนัดหมายมาหากมีคำสั่งเจาะเลือดตรวจปัสสาวะ สามารถตรวจเลือดและปัสสาวะล่วงหน้าได้ 1 - 2 วัน";
   return { symptomGroup, suggestion, imageURL };
