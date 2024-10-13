@@ -21,6 +21,33 @@ const sequenceQuestion = [
     question: [
       {
         type: "text",
+        text: "ท่านมีการนัดหมายเพื่อเข้ารับการรักษาหรือไม่ (มี = ใช่ ไม่มี = ไม่)",
+      },
+    ],
+    score: 0,
+  },
+  {
+    question: [
+      {
+        type: "text",
+        text: "ท่านมีนัดหมายเข้ารับการรักษาวันที่เท่าไหร่ (วว/ดด/ปป)",
+      },
+    ],
+    score: 0,
+  },
+  {
+    question: [
+      {
+        type: "text",
+        text: "ท่านมีนัดหมายกับแพทย์ท่านใด (กรุณาตอบเป็นตัวเลข)\n1.พญ.รัชนี เชี่ยวชาญธนกิจ\n2.พญ. พิมพ์อนงค์ ภู่เหลือ\n3.พญ.วิภาวี ฮั่นตระกูล\n4.พญ.ธิดารัตน์ ลักษณานันท\n5.พญ. วิภาดา ส่งวัฒนา ",
+      },
+    ],
+    score: 0,
+  },
+  {
+    question: [
+      {
+        type: "text",
         text: "การคัดกรองอาการของผู้ป่วยทาง Online และการพยาบาล",
       },
       {
@@ -274,6 +301,9 @@ app.post("/webhook", async (req, res) => {
               score: 0,
               questionIndex: 0,
               symptoms: [],
+              appoint: false,
+              appointDate: "",
+              doctor: "",
             },
           ];
         } else {
@@ -306,8 +336,29 @@ app.post("/webhook", async (req, res) => {
         );
         return; // Exit if user data is not found
       }
-
-      if (webhookEventObject.message.text === "ใช่") {
+      if (filterUsers.questionIndex === 0) {
+        if (webhookEventObject.message.text === "ใช่") {
+          filterUsers.appoint = true;
+          filterUsers.questionIndex += 1;
+        } else if (webhookEventObject.message.text === "ไม่") {
+          filterUsers.appoint = false;
+          filterUsers.questionIndex += 3;
+        }
+      } else if (filterUsers.questionIndex === 1 && filterUsers.appoint) {
+        filterUsers.appointDate = webhookEventObject.message.text;
+        filterUsers.questionIndex += 1;
+      } else if (filterUsers.questionIndex === 2 && filterUsers.appoint) {
+        const mappingDoctorNumber = {
+          1: "พญ.รัชนี เชี่ยวชาญธนกิจ",
+          2: "พญ. พิมพ์อนงค์ ภู่เหลือ",
+          3: "พญ.วิภาวี ฮั่นตระกูล",
+          4: "พญ.ธิดารัตน์ ลักษณานันท์",
+          5: "พญ. วิภาดา ส่งวัฒนา",
+        };
+        filterUsers.doctor =
+          mappingDoctorNumber[webhookEventObject.message.text];
+        filterUsers.questionIndex += 1;
+      } else if (webhookEventObject.message.text === "ใช่") {
         filterUsers.score += sequenceQuestion[filterUsers.questionIndex].score;
         const [desQuestionArray] =
           sequenceQuestion[filterUsers.questionIndex].question;
@@ -317,7 +368,7 @@ app.post("/webhook", async (req, res) => {
       } else if (webhookEventObject.message.text === "ไม่") {
         filterUsers.questionIndex += 1;
       }
-      if (filterUsers.questionIndex > 6 || filterUsers.score >= 15) {
+      if (filterUsers.questionIndex > 9 || filterUsers.score >= 15) {
         const googleSheetClient = await _getGoogleSheetClient();
         const date = new Date();
         const showDate = formatDate(date.toLocaleDateString());
@@ -328,11 +379,30 @@ app.post("/webhook", async (req, res) => {
         );
         console.log("iamgeg", imageURL);
 
+        const responseMessage = [
+          {
+            type: "text",
+            text: symptomGroup,
+          },
+          {
+            type: "image",
+            originalContentUrl: imageURL,
+            previewImageUrl: imageURL,
+          },
+        ];
+
+        if (filterUsers.appoint) {
+          const appointInfo = `มีการนัดหมาย\n${filterUsers.doctor}\nวันที่นัดหมาย ${filterUsers.appointDate}`;
+          responseMessage.push({ type: "text", text: appointInfo });
+        }
+
         const dataToBeInserted = [
           [
             `${showDate} ${date.toLocaleTimeString()}`,
             userProfile.displayName,
             symptomGroup,
+            filterUsers.doctor,
+            filterUsers.appointDate,
           ],
         ];
         await _writeGoogleSheet(
@@ -342,25 +412,15 @@ app.post("/webhook", async (req, res) => {
           range,
           dataToBeInserted
         );
-        await sendMessage(
-          userId,
-          [
-            {
-              type: "text",
-              text: symptomGroup,
-            },
-            {
-              type: "image",
-              originalContentUrl: imageURL,
-              previewImageUrl: imageURL,
-            },
-          ],
-          token
-        );
+        await sendMessage(userId, responseMessage, token);
 
         usersData = deleteUserId(userId);
         return;
       }
+      //Start ask question
+
+      //Additonal question
+
       const userMessageText =
         sequenceQuestion[filterUsers.questionIndex].question;
 
