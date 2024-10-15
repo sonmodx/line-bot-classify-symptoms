@@ -9,7 +9,7 @@ require("dotenv").config();
 
 const PORT = "8080";
 const LINE_API = "https://api.line.me/v2/bot";
-const serviceAccountKeyFile = process.env.SECRET_FILE;
+const serviceAccountKeyFile = "/workspace/service-account-key";
 const sheetId = "18mEx7Ut_x59Wh3uByYPvS1rSfR9HIqfrsjsLh1IBwY8";
 const tabName = "Users";
 const range = "A:C";
