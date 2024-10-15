@@ -10,7 +10,7 @@ require("dotenv").config();
 const PORT = "8080";
 const LINE_API = "https://api.line.me/v2/bot";
 // const serviceAccountKeyFile = "./thematic-answer-432603-p4-74c1e94139fe.json";
-const serviceAccountKeyFile = "./service-account-key";
+const serviceAccountKeyFile = "./service-account-key.json";
 const sheetId = "18mEx7Ut_x59Wh3uByYPvS1rSfR9HIqfrsjsLh1IBwY8";
 const tabName = "Users";
 const range = "A:C";
