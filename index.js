@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 require("dotenv").config();
 
-const PORT = "3000";
+const PORT = "8080";
 const LINE_API = "https://api.line.me/v2/bot";
 const serviceAccountKeyFile = "./thematic-answer-432603-p4-74c1e94139fe.json";
 const sheetId = "18mEx7Ut_x59Wh3uByYPvS1rSfR9HIqfrsjsLh1IBwY8";
